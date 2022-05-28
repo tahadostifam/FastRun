@@ -23,9 +23,9 @@ module RunCode
             end
 
             class RunCppFile < Dry::CLI::Command
-                desc "Build and execute c++ file"
+                desc "Build and execute c++ file."
 
-                argument :filename, desc: "Your C/C++ file name."
+                argument :filename, type: :string, desc: "Your C/C++ file name."
                 option :compile_args, type: :array, default: [], desc: "Compile arguments"
 
                 example [
@@ -41,7 +41,7 @@ module RunCode
                     when '.c'
                         compiler_cli_name = "gcc"
                     else
-                        puts "bad file! #{extname} not supported"
+                        puts "Bad file! #{extname} not supported."
                         exit
                     end
                     s = "#{compiler_cli_name} #{filename.strip} -o /tmp/#{random_tmp_file_name}"
@@ -65,16 +65,71 @@ module RunCode
                                 exit
                             end
                         else
-                            puts "file not found!"    
+                            puts "File not found!"    
                         end
                     else
-                        puts "file name required! please --help"
+                        puts "File name required! please checkout --help."
                     end
                 end
             end
 
+            class Compile < Dry::CLI::Command
+                desc "Just compiles c/c++ file."
+
+                argument :filename, type: :string, desc: "Your C/C++ file name."
+                argument :output, type: :string, desc: "Output file name."
+                option :compile_args, type: :array, default: [], desc: "Compile arguments"
+
+                example [
+                    "compile ./src/hello_world.cpp ./hello_world",
+                    "compile ./src/hello_world.cpp ./hello_world --compile_args -Wall"
+                ]
+
+                def format_bash_cmd_for_c_and_cpp(filename, extname, output_filename, compile_args)
+                    compiler_cli_name = ""
+                    case extname
+                    when '.cpp'
+                        compiler_cli_name = "g++"
+                    when '.c'
+                        compiler_cli_name = "gcc"
+                    else
+                        puts "bad file! #{extname} not supported"
+                        exit
+                    end
+                    s = "#{compiler_cli_name} #{filename.strip} -o #{output_filename}"
+                    if compile_args.length > 0
+                        s += " #{compile_args.join(" ")}"
+                    end
+                    return s
+                end
+
+                def call(filename: nil, output: nil, compile_args: [], **)
+                    if filename != nil && output != nil
+                        if filename
+                            if File.exists? filename
+                                    extname = File.extname filename
+                                    formated_bash_cmd = format_bash_cmd_for_c_and_cpp(filename, extname, output, compile_args)
+                                    r = `#{formated_bash_cmd}`
+                                    if $?.exitstatus == 0
+                                        puts "Compiled successully!"
+                                    else
+                                        exit
+                                    end
+                            else
+                                puts "file not found!"    
+                            end
+                        else
+                            puts "file name required! please checkout --help"
+                        end
+                    else
+                        puts "All arguments required! please checkout --help"
+                    end
+                end
+            end
+
+            register "run", RunCppFile, aliases: ["r", "run", "exec"]
+            register "compile", Compile, aliases: ["c", "compile"]
             register "version", Version, aliases: ["v", "-v", "--version", "version"]
-            register "run", RunCppFile, aliases: ["r", "-r", "--run", "run", "exec"]
         end
     end
 end
