@@ -30,7 +30,7 @@ module RunCode
 
                 example [
                     "run ./src/hello_world.cpp",
-                    "run ./src/hello_world.cpp --compile_args -Wall"
+                    "run ./src/hello_world.cpp --compile-args=-Wall"
                 ]
 
                 def format_bash_cmd_for_c_and_cpp(filename, extname, random_tmp_file_name, compile_args)
@@ -82,7 +82,7 @@ module RunCode
 
                 example [
                     "compile ./src/hello_world.cpp ./hello_world",
-                    "compile ./src/hello_world.cpp ./hello_world --compile_args -Wall"
+                    "compile ./src/hello_world.cpp ./hello_world --compile-args=-Wall"
                 ]
 
                 def format_bash_cmd_for_c_and_cpp(filename, extname, output_filename, compile_args)
