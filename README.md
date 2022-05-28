@@ -4,7 +4,7 @@
 
 ```bash
 git clone https://github.com/tahadostifam/FastRun.git
-cd RunCode-Cpp-Tool
+cd FastRun
 bundle
 sudo chmod +x ./fastrun
 sudo cp ./fastrun /usr/local/bin
