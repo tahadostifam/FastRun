@@ -1,4 +1,4 @@
-### RunCode-Cpp-Tool
+### FastRun :: C/C++ Code Runner Tool
 
 ### Install
 
