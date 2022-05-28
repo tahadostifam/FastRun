@@ -1,0 +1,82 @@
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+require "dry/cli"
+require "securerandom"
+
+RUN_CODE_INFO = {
+    :version => "0.1"
+}
+
+module RunCode
+    module CLI
+        module Commands
+            # extend Dry::CLI::Registry
+            extend Dry::CLI::Registry
+
+            class Version < Dry::CLI::Command
+                desc "Print version."
+
+                def call(*)
+                    puts RUN_CODE_INFO[:version]
+                end
+            end
+
+            class RunCppFile < Dry::CLI::Command
+                desc "Build and execute c++ file"
+
+                argument :filename, desc: "Your C/C++ file name."
+                option :compile_args, type: :array, default: [], desc: "Compile arguments"
+
+                example [
+                    "run ./src/hello_world.cpp",
+                    "run ./src/hello_world.cpp --compile_args -Wall"
+                ]
+
+                def format_bash_cmd_for_c_and_cpp(filename, extname, random_tmp_file_name, compile_args)
+                    compiler_cli_name = ""
+                    case extname
+                    when '.cpp'
+                        compiler_cli_name = "g++"
+                    when '.c'
+                        compiler_cli_name = "gcc"
+                    else
+                        puts "bad file! #{extname} not supported"
+                        exit
+                    end
+                    s = "#{compiler_cli_name} #{filename.strip} -o /tmp/#{random_tmp_file_name}"
+                    if compile_args.length > 0
+                        s += " #{compile_args.join(" ")}"
+                    end
+                    return s
+                end
+                
+
+                def call(filename: nil, compile_args: [], **)
+                    if filename
+                        if File.exists? filename
+                            random_tmp_file_name = SecureRandom.hex(15)
+                            extname = File.extname filename
+                            formated_bash_cmd = format_bash_cmd_for_c_and_cpp(filename, extname, random_tmp_file_name, compile_args)
+                            r = `#{formated_bash_cmd}`
+                            if $?.exitstatus == 0
+                                puts `/tmp/#{random_tmp_file_name}`
+                            else
+                                exit
+                            end
+                        else
+                            puts "file not found!"    
+                        end
+                    else
+                        puts "file name required! please --help"
+                    end
+                end
+            end
+
+            register "version", Version, aliases: ["v", "-v", "--version", "version"]
+            register "run", RunCppFile, aliases: ["r", "-r", "--run", "run", "exec"]
+        end
+    end
+end
+
+Dry::CLI.new(RunCode::CLI::Commands).call
