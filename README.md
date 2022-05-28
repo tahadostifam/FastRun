@@ -4,6 +4,8 @@
 
 ```bash
 git clone https://github.com/tahadostifam/RunCode-Cpp-Tool.git
+cd RunCode-Cpp-Tool
+bundle
 sudo chmod +x ./run_code
 sudo cp ./run_code /usr/local/bin
 ```
