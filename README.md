@@ -3,7 +3,7 @@
 ### Install
 
 ```bash
-git clone https://github.com/tahadostifam/RunCode-Cpp-Tool.git
+git clone https://github.com/tahadostifam/FastRun.git
 cd RunCode-Cpp-Tool
 bundle
 sudo chmod +x ./fastrun
