@@ -32,7 +32,7 @@ fastrun --help
 
 ```txt
 Commands:
-  fastrun compile [FILENAME] [OUTPUT]  # Just compiles c/c++ file.
-  fastrun run [FILENAME]               # Build and execute c++ file.
-  fastrun version                      # Print version.
+  fastrun compile [FILENAME] [OUTPUT] # Just compiles c/c++ file.
+  fastrun run [FILENAME]              # Compile and execute c/c++ file.
+  fastrun version                     # Print version.
 ```
