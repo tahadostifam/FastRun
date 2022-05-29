@@ -15,6 +15,7 @@ sudo cp ./fastrun /usr/local/bin
 ```bash
 fastrun run ~/Programming/Cpp-Examples/hello_world.cpp
 fastrun run ~/Programming/Cpp-Examples/hello_world.cpp --compile-args=-Wall
+fastrun run ~/Programming/Cpp-Examples/hello_world.cpp --compile-args=-Wall,-Weffc++,-Wextra
 # Hello World
 ```
 
