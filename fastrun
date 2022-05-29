@@ -9,6 +9,36 @@ RUN_CODE_INFO = {
 }
 
 module RunCode
+    module Lib
+        def self.get_compiler_cli_name(extname)
+            r = ""
+            case extname
+            when '.cpp'
+                r = "g++"
+            when '.c'
+                r = "gcc"
+            else
+                puts "Bad file! #{extname} not supported."
+                exit
+            end
+            r
+        end
+
+        def self.make_compile_file_cmd(extname, filename, output_filename, compile_args, std_args)
+            s = "#{RunCode::Lib.get_compiler_cli_name(extname)} #{filename.strip} -o #{output_filename}"
+            
+            if compile_args.length > 0
+                s += " #{compile_args.join(" ")}"
+            end
+
+            if std_args.length > 0
+                s += " -std=#{std_args.join(" ")}"
+            end
+
+            return s
+        end
+        
+    end
     module CLI
         module Commands
             # extend Dry::CLI::Registry
@@ -27,37 +57,24 @@ module RunCode
 
                 argument :filename, type: :string, desc: "Your C/C++ file name."
                 option :compile_args, type: :array, default: [], desc: "Compile arguments"
+                option :std_args, type: :array, default: [], desc: "Std arguments"
 
                 example [
                     "run ./src/hello_world.cpp",
                     "run ./src/hello_world.cpp --compile-args=-Wall"
                 ]
 
-                def format_bash_cmd_for_c_and_cpp(filename, extname, random_tmp_file_name, compile_args)
-                    compiler_cli_name = ""
-                    case extname
-                    when '.cpp'
-                        compiler_cli_name = "g++"
-                    when '.c'
-                        compiler_cli_name = "gcc"
-                    else
-                        puts "Bad file! #{extname} not supported."
-                        exit
-                    end
-                    s = "#{compiler_cli_name} #{filename.strip} -o /tmp/#{random_tmp_file_name}"
-                    if compile_args.length > 0
-                        s += " #{compile_args.join(" ")}"
-                    end
-                    return s
-                end
-                
-
-                def call(filename: nil, compile_args: [], **)
+                def call(filename: nil, compile_args: [], std_args: [], **)
                     if filename
                         if File.exists? filename
                             random_tmp_file_name = SecureRandom.hex(15)
-                            extname = File.extname filename
-                            formated_bash_cmd = format_bash_cmd_for_c_and_cpp(filename, extname, random_tmp_file_name, compile_args)
+                            formated_bash_cmd = Lib.make_compile_file_cmd(
+                                File.extname(filename),
+                                filename,
+                                "/tmp/#{random_tmp_file_name}",
+                                compile_args,
+                                std_args
+                            )
                             r = `#{formated_bash_cmd}`
                             if $?.exitstatus == 0
                                 puts `/tmp/#{random_tmp_file_name}`
@@ -79,42 +96,32 @@ module RunCode
                 argument :filename, type: :string, desc: "Your C/C++ file name."
                 argument :output, type: :string, desc: "Output file name."
                 option :compile_args, type: :array, default: [], desc: "Compile arguments"
+                option :std_args, type: :array, default: [], desc: "Std arguments"
 
                 example [
                     "compile ./src/hello_world.cpp ./hello_world",
-                    "compile ./src/hello_world.cpp ./hello_world --compile-args=-Wall"
+                    "compile ./src/hello_world.cpp ./hello_world --compile-args=-Wall",
+                    "compile ./src/hello_world.cpp ./hello_world --compile-args=-Wall --std=c++17"
                 ]
 
-                def format_bash_cmd_for_c_and_cpp(filename, extname, output_filename, compile_args)
-                    compiler_cli_name = ""
-                    case extname
-                    when '.cpp'
-                        compiler_cli_name = "g++"
-                    when '.c'
-                        compiler_cli_name = "gcc"
-                    else
-                        puts "bad file! #{extname} not supported"
-                        exit
-                    end
-                    s = "#{compiler_cli_name} #{filename.strip} -o #{output_filename}"
-                    if compile_args.length > 0
-                        s += " #{compile_args.join(" ")}"
-                    end
-                    return s
-                end
-
-                def call(filename: nil, output: nil, compile_args: [], **)
+                def call(filename: nil, output: nil, compile_args: [], std_args: [], **)
                     if filename != nil && output != nil
                         if filename
                             if File.exists? filename
-                                    extname = File.extname filename
-                                    formated_bash_cmd = format_bash_cmd_for_c_and_cpp(filename, extname, output, compile_args)
-                                    r = `#{formated_bash_cmd}`
-                                    if $?.exitstatus == 0
-                                        puts "Compiled successully!"
-                                    else
-                                        exit
-                                    end
+                                formated_bash_cmd = Lib.make_compile_file_cmd(
+                                    File.extname(filename),
+                                    filename,
+                                    output,
+                                    compile_args,
+                                    std_args
+                                )
+                                p formated_bash_cmd
+                                r = `#{formated_bash_cmd}`
+                                if $?.exitstatus == 0
+                                    puts "Compiled successully!"
+                                else
+                                    exit
+                                end
                             else
                                 puts "file not found!"    
                             end
