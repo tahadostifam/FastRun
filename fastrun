@@ -53,7 +53,7 @@ module RunCode
             end
 
             class RunCppFile < Dry::CLI::Command
-                desc "Build and execute c++ file."
+                desc "Compile and execute c/c++ file."
 
                 argument :filename, type: :string, desc: "Your C/C++ file name."
                 option :compile_args, type: :array, default: [], desc: "Compile arguments"
