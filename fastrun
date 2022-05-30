@@ -4,7 +4,7 @@ require "bundler/setup"
 require "dry/cli"
 require "securerandom"
 
-RUN_CODE_INFO = {
+FAST_RUN_INFO = {
   :version => "1.2",
 }
 
@@ -48,7 +48,7 @@ module RunCode
         desc "Print version."
 
         def call(*)
-          puts RUN_CODE_INFO[:version]
+          puts FAST_RUN_INFO[:version]
         end
       end
 
