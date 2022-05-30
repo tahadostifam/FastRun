@@ -5,140 +5,140 @@ require "dry/cli"
 require "securerandom"
 
 RUN_CODE_INFO = {
-    :version => "1.1"
+  :version => "1.1",
 }
 
 module RunCode
-    module Lib
-        def self.get_compiler_cli_name(extname)
-            r = ""
-            case extname
-            when '.cpp'
-                r = "g++"
-            when '.c'
-                r = "gcc"
-            else
-                puts "Bad file! #{extname} not supported."
+  module Lib
+    def self.get_compiler_cli_name(extname)
+      r = ""
+      case extname
+      when ".cpp"
+        r = "g++"
+      when ".c"
+        r = "gcc"
+      else
+        puts "Bad file! #{extname} not supported."
+        exit
+      end
+      r
+    end
+
+    def self.make_compile_file_cmd(extname, filename, output_filename, compile_args, std_args)
+      s = "#{RunCode::Lib.get_compiler_cli_name(extname)} #{filename.strip} -o #{output_filename}"
+
+      if compile_args.length > 0
+        s += " #{compile_args.join(" ")}"
+      end
+
+      if std_args.length > 0
+        s += " -std=#{std_args.join(" ")}"
+      end
+
+      return s
+    end
+  end
+
+  module CLI
+    module Commands
+      # extend Dry::CLI::Registry
+      extend Dry::CLI::Registry
+
+      class Version < Dry::CLI::Command
+        desc "Print version."
+
+        def call(*)
+          puts RUN_CODE_INFO[:version]
+        end
+      end
+
+      class RunCppFile < Dry::CLI::Command
+        desc "Compile and execute c/c++ file."
+
+        argument :filename, type: :string, desc: "Your C/C++ file name."
+        option :compile_args, type: :array, default: [], desc: "Compile arguments"
+        option :std_args, type: :array, default: [], desc: "Std arguments"
+
+        example [
+                  "run ./src/hello_world.cpp",
+                  "run ./src/hello_world.cpp --compile-args=-Wall",
+                ]
+
+        def call(filename: nil, compile_args: [], std_args: [], **)
+          if filename
+            if File.exists? filename
+              random_tmp_file_name = SecureRandom.hex(15)
+              formated_bash_cmd = Lib.make_compile_file_cmd(
+                File.extname(filename),
+                filename,
+                "/tmp/#{random_tmp_file_name}",
+                compile_args,
+                std_args
+              )
+              r = `#{formated_bash_cmd}`
+              if $?.exitstatus == 0
+                puts `/tmp/#{random_tmp_file_name}`
+              else
                 exit
+              end
+            else
+              puts "File not found!"
             end
-            r
+          else
+            puts "File name required! please checkout --help."
+          end
         end
+      end
 
-        def self.make_compile_file_cmd(extname, filename, output_filename, compile_args, std_args)
-            s = "#{RunCode::Lib.get_compiler_cli_name(extname)} #{filename.strip} -o #{output_filename}"
-            
-            if compile_args.length > 0
-                s += " #{compile_args.join(" ")}"
-            end
+      class Compile < Dry::CLI::Command
+        desc "Just compiles c/c++ file."
 
-            if std_args.length > 0
-                s += " -std=#{std_args.join(" ")}"
-            end
+        argument :filename, type: :string, desc: "Your C/C++ file name."
+        argument :output, type: :string, desc: "Output file name."
+        option :compile_args, type: :array, default: [], desc: "Compile arguments"
+        option :std_args, type: :array, default: [], desc: "Std arguments"
 
-            return s
-        end
-        
-    end
-    module CLI
-        module Commands
-            # extend Dry::CLI::Registry
-            extend Dry::CLI::Registry
-
-            class Version < Dry::CLI::Command
-                desc "Print version."
-
-                def call(*)
-                    puts RUN_CODE_INFO[:version]
-                end
-            end
-
-            class RunCppFile < Dry::CLI::Command
-                desc "Compile and execute c/c++ file."
-
-                argument :filename, type: :string, desc: "Your C/C++ file name."
-                option :compile_args, type: :array, default: [], desc: "Compile arguments"
-                option :std_args, type: :array, default: [], desc: "Std arguments"
-
-                example [
-                    "run ./src/hello_world.cpp",
-                    "run ./src/hello_world.cpp --compile-args=-Wall"
+        example [
+                  "compile ./src/hello_world.cpp ./hello_world",
+                  "compile ./src/hello_world.cpp ./hello_world --compile-args=-Wall",
+                  "compile ./src/hello_world.cpp ./hello_world --compile-args=-Wall --std=c++17",
                 ]
 
-                def call(filename: nil, compile_args: [], std_args: [], **)
-                    if filename
-                        if File.exists? filename
-                            random_tmp_file_name = SecureRandom.hex(15)
-                            formated_bash_cmd = Lib.make_compile_file_cmd(
-                                File.extname(filename),
-                                filename,
-                                "/tmp/#{random_tmp_file_name}",
-                                compile_args,
-                                std_args
-                            )
-                            r = `#{formated_bash_cmd}`
-                            if $?.exitstatus == 0
-                                puts `/tmp/#{random_tmp_file_name}`
-                            else
-                                exit
-                            end
-                        else
-                            puts "File not found!"    
-                        end
-                    else
-                        puts "File name required! please checkout --help."
-                    end
+        def call(filename: nil, output: nil, compile_args: [], std_args: [], **)
+          if filename != nil && output != nil
+            if filename
+              if File.exists? filename
+                formated_bash_cmd = Lib.make_compile_file_cmd(
+                  File.extname(filename),
+                  filename,
+                  output,
+                  compile_args,
+                  std_args
+                )
+                p formated_bash_cmd
+                r = `#{formated_bash_cmd}`
+                if $?.exitstatus == 0
+                  puts "Compiled successully!"
+                else
+                  exit
                 end
+              else
+                puts "file not found!"
+              end
+            else
+              puts "file name required! please checkout --help"
             end
-
-            class Compile < Dry::CLI::Command
-                desc "Just compiles c/c++ file."
-
-                argument :filename, type: :string, desc: "Your C/C++ file name."
-                argument :output, type: :string, desc: "Output file name."
-                option :compile_args, type: :array, default: [], desc: "Compile arguments"
-                option :std_args, type: :array, default: [], desc: "Std arguments"
-
-                example [
-                    "compile ./src/hello_world.cpp ./hello_world",
-                    "compile ./src/hello_world.cpp ./hello_world --compile-args=-Wall",
-                    "compile ./src/hello_world.cpp ./hello_world --compile-args=-Wall --std=c++17"
-                ]
-
-                def call(filename: nil, output: nil, compile_args: [], std_args: [], **)
-                    if filename != nil && output != nil
-                        if filename
-                            if File.exists? filename
-                                formated_bash_cmd = Lib.make_compile_file_cmd(
-                                    File.extname(filename),
-                                    filename,
-                                    output,
-                                    compile_args,
-                                    std_args
-                                )
-                                p formated_bash_cmd
-                                r = `#{formated_bash_cmd}`
-                                if $?.exitstatus == 0
-                                    puts "Compiled successully!"
-                                else
-                                    exit
-                                end
-                            else
-                                puts "file not found!"    
-                            end
-                        else
-                            puts "file name required! please checkout --help"
-                        end
-                    else
-                        puts "All arguments required! please checkout --help"
-                    end
-                end
-            end
-
-            register "run", RunCppFile, aliases: ["r", "run", "exec"]
-            register "compile", Compile, aliases: ["c", "compile"]
-            register "version", Version, aliases: ["v", "-v", "--version", "version"]
+          else
+            puts "All arguments required! please checkout --help"
+          end
         end
+      end
+
+      register "run", RunCppFile, aliases: ["r", "run", "exec"]
+      register "compile", Compile, aliases: ["c", "compile"]
+      register "version", Version, aliases: ["v", "-v", "--version", "version"]
     end
+  end
 end
 
 Dry::CLI.new(RunCode::CLI::Commands).call
