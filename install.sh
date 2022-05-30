@@ -35,19 +35,19 @@ function trim_string(){
 if [[ -f "/usr/local/bin/fastrun" ]]; then
     local_version=$(get_local_installed_version | bc)
     latest_version=$(get_latest_version | bc)
+
+    if [ $local_version \< $latest_version ]; then
+        echo "A new version is available (v${latest_version})."
+        echo "Installed version: (v${local_version})."
+
+        install
+
+        echo "New version installed successfully!"
+    else
+        echo "Latet version installed on your system!"
+    fi;
 else
     install
 
     echo "Installed successfully!"
-fi;
-
-if [ $local_version \< $latest_version ]; then
-    echo "A new version is available (v${latest_version})."
-    echo "Installed version: (v${local_version})."
-
-    install
-
-    echo "New version installed successfully!"
-else
-    echo "Latet version installed on your system!"
 fi;

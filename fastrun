@@ -118,7 +118,6 @@ module RunCode
                   compile_args,
                   std_args
                 )
-                p formated_bash_cmd
                 r = `#{formated_bash_cmd}`
                 if $?.exitstatus == 0
                   puts "Compiled successully!"
