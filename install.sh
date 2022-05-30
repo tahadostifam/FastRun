@@ -32,12 +32,10 @@ function trim_string(){
 if [[ -f "/usr/local/bin/fastrun" ]]; then
     local_version=$(get_local_installed_version | bc)
     latest_version=$(get_latest_version | bc)
-    
-    if [ $local_version \< $latest_version ]; then
-        install
-    else
-        echo "Latest version of fastrun installed on your system."
-    fi;
 else
+    install
+fi;
+
+if [ $local_version \< $latest_version ]; then
     install
 fi;
