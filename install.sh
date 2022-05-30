@@ -1,6 +1,7 @@
 #!/usr/bin/env /bin/bash
 
 function install(){
+    {
     cd /tmp
 
     git clone https://github.com/tahadostifam/FastRun.git
@@ -12,6 +13,8 @@ function install(){
     sudo chmod +x ./fastrun
 
     sudo cp ./fastrun /usr/local/bin
+
+    } &> /dev/null
 }
 
 function get_latest_version(){
@@ -34,8 +37,17 @@ if [[ -f "/usr/local/bin/fastrun" ]]; then
     latest_version=$(get_latest_version | bc)
 else
     install
+
+    echo "Installed successfully!"
 fi;
 
 if [ $local_version \< $latest_version ]; then
+    echo "A new version is available (v${latest_version})."
+    echo "Installed version: (v${local_version})."
+
     install
+
+    echo "New version installed successfully!"
+else
+    echo "Latet version installed on your system!"
 fi;
