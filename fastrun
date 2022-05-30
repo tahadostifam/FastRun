@@ -3,6 +3,7 @@
 require "bundler/setup"
 require "dry/cli"
 require "securerandom"
+require "open3"
 
 RUN_CODE_INFO = {
   :version => "1.1",
@@ -75,9 +76,12 @@ module RunCode
                 compile_args,
                 std_args
               )
+
               r = `#{formated_bash_cmd}`
               if $?.exitstatus == 0
-                puts `/tmp/#{random_tmp_file_name}`
+                pid = spawn("/tmp/#{random_tmp_file_name}")
+
+                Process.wait pid
               else
                 exit
               end
