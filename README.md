@@ -18,12 +18,9 @@ fastrun run ./examples/hello_world.cpp --std=c++17
 ```
 
 ```bash
-# Header files & directories (Not published yet in last release!)
-fastrun run ./examples/headers/main.cpp --header-files=./examples/headers/sum.cp
-fastrun run ./examples/main.cpp --headers-dir=./examples/includes
+# Header files (Not published yet in last release!)
+fastrun run ./examples/headers/main.cpp --header-files=./examples/headers/sum.cpp
 ```
-
-Note: You can't use --header-files and --headers-dir in same time.
 
 ```bash
 fastrun compile ./examples/hello_world.cpp ./hello_world --compile-args=-Wall --std=c++17

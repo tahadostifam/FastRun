@@ -33,7 +33,7 @@ module RunCode
       return s
     end
 
-    def self.make_compile_file_cmd(extname, filename, output_filename, compile_args, std_args, header_files, headers_dirs)
+    def self.make_compile_file_cmd(extname, filename, output_filename, compile_args, std_args, header_files)
       s = "#{RunCode::Lib.get_compiler_cli_name(extname)} #{filename.strip}"
 
       if compile_args.length > 0
@@ -44,66 +44,26 @@ module RunCode
         s += " -std=#{std_args.join(" ")}"
       end
 
-      if (header_files.length > 0 && headers_dirs.length == 0) || (header_files.length == 0 && headers_dirs.length > 0)
-        if header_files.length > 0
-          errors_list = []
+      if header_files.length > 0
+        errors_list = []
 
-          header_files.each do |item|
-            formated_path = format_home_path(item)
+        header_files.each do |item|
+          formated_path = format_home_path(item)
 
-            unless File.exists? formated_path
-              errors_list << "  - #{formated_path}".red
-            end
-          end
-
-          if errors_list.length > 0
-            puts "Some of header files not found: ".light_yellow
-
-            puts errors_list.join(" ")
-
-            exit
-          else
-            s += " #{header_files.join(" ")}"
+          unless File.exists? formated_path
+            errors_list << "  - #{formated_path}".red
           end
         end
 
-        if headers_dirs.length > 0
-          errors_list = []
+        if errors_list.length > 0
+          puts "Some of header files not found: ".light_yellow
 
-          headers_dirs.each do |item|
-            formated_path = format_home_path(item)
+          puts errors_list.join(" ")
 
-            unless File.exists? formated_path
-              errors_list << "Dir not found  - #{formated_path}".red
-            else
-              unless File.directory? formated_path
-                errors_list << "Only dir allowed  - #{formated_path}".red
-              end
-            end
-          end
-
-          if errors_list.length > 0
-            puts "We got some errors: ".light_yellow
-
-            puts errors_list.join(" ")
-
-            exit
-          else
-            headers_dir_str = ""
-            headers_dirs.each do |item|
-              formated_path = format_home_path(item)
-              headers_dir_str += " -I/#{formated_path}"
-            end
-
-            puts headers_dir_str.yellow # FIXME
-
-            s += " #{headers_dir_str}"
-          end
+          exit
+        else
+          s += " #{header_files.join(" ")}"
         end
-      else
-        puts "You can't use --header-files and --headers-dir in same time.".red
-
-        exit
       end
 
       s += " -o #{output_filename}"
@@ -132,14 +92,13 @@ module RunCode
         option :compile_args, type: :array, default: [], desc: "Compile arguments"
         option :std_args, type: :array, default: [], desc: "Std arguments"
         option :header_files, type: :array, default: [], desc: "Header files"
-        option :headers_dirs, type: :array, default: [], desc: "Headers directory"
 
         example [
                   "run ./src/hello_world.cpp",
                   "run ./src/hello_world.cpp --compile-args=-Wall",
                 ]
 
-        def call(filename: nil, compile_args: [], std_args: [], header_files: [], headers_dirs: [], **)
+        def call(filename: nil, compile_args: [], std_args: [], header_files: [], **)
           if filename
             if File.exists? filename
               random_tmp_file_name = SecureRandom.hex(15)
@@ -150,7 +109,6 @@ module RunCode
                 compile_args,
                 std_args,
                 header_files,
-                headers_dirs
               )
 
               r = `#{formated_bash_cmd}`
@@ -178,7 +136,6 @@ module RunCode
         option :compile_args, type: :array, default: [], desc: "Compile arguments"
         option :std_args, type: :array, default: [], desc: "Std arguments"
         option :header_files, type: :array, default: [], desc: "Header files"
-        option :headers_dirs, type: :array, default: [], desc: "Headers directory"
 
         example [
                   "compile ./src/hello_world.cpp ./hello_world",
@@ -186,7 +143,7 @@ module RunCode
                   "compile ./src/hello_world.cpp ./hello_world --compile-args=-Wall --std=c++17",
                 ]
 
-        def call(filename: nil, output: nil, compile_args: [], std_args: [], header_files: [], headers_dirs: [], **)
+        def call(filename: nil, output: nil, compile_args: [], std_args: [], header_files: [], **)
           if filename != nil && output != nil
             if filename
               if File.exists? filename
@@ -197,7 +154,6 @@ module RunCode
                   compile_args,
                   std_args,
                   header_files,
-                  headers_dirs
                 )
                 r = `#{formated_bash_cmd}`
                 if $?.exitstatus == 0
